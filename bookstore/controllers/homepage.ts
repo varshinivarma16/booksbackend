@@ -20,36 +20,35 @@ class BookController {
 
   // ✅ GET category by name with books
   static async getCategoryByNameWithBooks(req: Request, res: Response): Promise<void> {
-  try {
-    const { categoryName } = req.params;
+    try {
+      const { categoryName } = req.params;
 
-    if (!categoryName) {
-      res.status(400).json({ error: 'Category name is required' });
-      return;
+      if (!categoryName) {
+        res.status(400).json({ error: 'Category name is required' });
+        return;
+      }
+
+      const category = await CategoryModel.findOne({
+        name: { $regex: `^${categoryName}$`, $options: 'i' }
+      }).populate({
+        path: 'books',
+        select: 'title price imageUrl bookName viewCount subCategory'
+      });
+
+      if (!category) {
+        res.status(404).json({ error: 'Category not found for the specified name' });
+        return;
+      }
+
+      res.status(200).json({
+        categoryName: category.name,
+        books: category.books
+      });
+    } catch (err: any) {
+      console.error('Error fetching category by name:', err);
+      res.status(500).json({ error: 'An unexpected error occurred while fetching category data' });
     }
-
-    const category = await CategoryModel.findOne({
-      name: { $regex: `^${categoryName}$`, $options: 'i' }
-    }).populate({
-      path: 'books',
-      select: 'title price imageUrl bookName viewCount subCategory'
-    });
-
-    if (!category) {
-      res.status(404).json({ error: 'Category not found for the specified name' });
-      return;
-    }
-
-    res.status(200).json({
-      categoryName: category.name,
-      books: category.books
-    });
-  } catch (err: any) {
-    console.error('Error fetching category by name:', err);
-    res.status(500).json({ error: 'An unexpected error occurred while fetching category data' });
   }
-}
-
 
   // ✅ POST a new category
   static async createCategory(req: Request, res: Response): Promise<void> {
@@ -96,9 +95,9 @@ class BookController {
       for (const book of booksData) {
         const { title, price, imageUrl, subCategory, description, viewCount, estimatedDelivery, tags, condition, author, publisher, isbn } = book;
 
-        if (!title || !price || !imageUrl || !subCategory || !description || viewCount === undefined || !estimatedDelivery || !tags || !condition  ) {
+        if (!title || !price || !imageUrl || !subCategory || !description || viewCount === undefined || !estimatedDelivery || !tags || !condition) {
           res.status(400).json({
-            error: 'All fields (title, price, imageUrl, subCategory, description, viewCount, estimatedDelivery, tags, condition, productCategory, author, publisher, isbn) are required for each book'
+            error: 'All fields (title, price, imageUrl, subCategory, description, viewCount, estimatedDelivery, tags, condition, author, publisher, isbn) are required for each book'
           });
           return;
         }
@@ -141,7 +140,6 @@ class BookController {
           author,
           publisher,
           isbn,
-          
         });
 
         const savedBook = await newBook.save();
@@ -162,37 +160,35 @@ class BookController {
     }
   }
 
-  // ✅ GET book details by bookName
+  // ✅ GET book details by ID
   static async getBookDetailsById(req: Request, res: Response): Promise<void> {
-  try {
-    const { bookId } = req.params;
+    try {
+      const { bookId } = req.params;
 
-    if (!bookId) {
-      res.status(400).json({ error: 'Book ID is required' });
-      return;
+      if (!bookId) {
+        res.status(400).json({ error: 'Book ID is required' });
+        return;
+      }
+
+      const book = await BookModel.findById(bookId);
+
+      if (!book) {
+        res.status(404).json({ error: 'Book not found' });
+        return;
+      }
+
+      res.status(200).json(book);
+    } catch (err: any) {
+      console.error('Error fetching book details:', err);
+
+      if (err.name === 'CastError') {
+        res.status(400).json({ error: 'Invalid book ID format' });
+        return;
+      }
+
+      res.status(500).json({ error: 'An unexpected error occurred while fetching book details' });
     }
-
-    const book = await BookModel.findById(bookId);
-
-    if (!book) {
-      res.status(404).json({ error: 'Book not found' });
-      return;
-    }
-
-    res.status(200).json(book);
-  } catch (err:any) {
-    console.error('Error fetching book details:', err);
-    
-    // If invalid ID format, return 400
-    if (err.name === 'CastError') {
-      res.status(400).json({ error: 'Invalid book ID format' });
-      return;
-    }
-
-    res.status(500).json({ error: 'An unexpected error occurred while fetching book details' });
   }
-}
-
 
   // ✅ DELETE all categories
   static async deleteAllCategories(req: Request, res: Response): Promise<void> {
@@ -216,9 +212,52 @@ class BookController {
       res.status(500).json({ error: 'An unexpected error occurred while deleting books' });
     }
   }
+
+  // ✅ DELETE category by name along with its books
+  // ✅ DELETE category by name along with its books
+// ✅ DELETE category by name along with its books
+static async deleteCategoryByName(req: Request, res: Response): Promise<void> {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { categoryName } = req.params;
+
+    if (!categoryName) {
+      res.status(400).json({ error: 'Category name is required' });
+      return;
+    }
+
+    // Find the category by name (case-insensitive)
+    const category = await CategoryModel.findOne({
+      name: { $regex: `^${categoryName}$`, $options: 'i' },
+    }).session(session);
+
+    if (!category) {
+      await session.abortTransaction();
+      session.endSession();
+      res.status(404).json({ error: `Category '${categoryName}' not found` });
+      return;
+    }
+
+    // Delete all books associated with the category
+    await BookModel.deleteMany(
+      { categoryName: { $regex: `^${categoryName}$`, $options: 'i' } },
+      { session }
+    );
+
+    // Delete the category
+    await CategoryModel.deleteOne({ _id: category._id }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+    res.status(200).json({ message: `Category '${categoryName}' and its books deleted successfully` });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error('Error deleting category:', err);
+    res.status(500).json({ error: 'An unexpected error occurred while deleting the category' });
+  }
 }
-
-
-
+}
 
 export default BookController;

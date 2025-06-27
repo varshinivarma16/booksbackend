@@ -19,7 +19,6 @@
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.2",
     "@types/cookie-parser": "^1.4.3",
-    "@types/cors": "^2.8.13",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/socket.io": "^3.0.2",
     "@types/validator": "^13.7.17",
@@ -54,9 +53,11 @@
     "whatsapp-web.js": "^1.28.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/ejs": "^3.1.2",
     "@types/express": "^5.0.3",
-    "@types/node": "^22.5.4",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^22.15.33",
     "@types/node-cron": "^3.0.8",
     "@types/nodemailer": "^6.4.9",
     "@types/uuid": "^10.0.0"
