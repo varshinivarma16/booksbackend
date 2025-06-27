@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                      // Output modern JS
+    "module": "commonjs",                    // Node.js module system
+    "outDir": "./build",                     // Output goes to /build
+    "rootDir": ".",                          // All your .ts files are in the root folder
+    "strict": true,                          // Enable all strict checks
+    "esModuleInterop": true,                 // Allow import/export compatibility
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["."],                          // Include everything from root
+  "exclude": ["node_modules", "build"]       // Exclude build + node_modules
+}
