@@ -9,7 +9,7 @@ export interface ICategory extends Document {
 const CategorySchema: Schema<ICategory> = new Schema(
   {
     name: { type: String, required: true },
-   
+    books: [{ type: Schema.Types.ObjectId, ref: 'Book' }]
   },
   { timestamps: true }
 );
