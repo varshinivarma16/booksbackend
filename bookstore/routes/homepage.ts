@@ -1,6 +1,7 @@
 import express from 'express';
 import BookController from '../../bookstore/controllers/homepage';
 import ReviewController from '../../bookstore/controllers/review';
+import BookRequestController from '../../bookstore/controllers/addbook';
 const router = express.Router();
 
 // Category routes
@@ -17,5 +18,8 @@ router.delete('/books', BookController.deleteAllBooks);
 
 router.post('/reviews', ReviewController.createReview);
 router.get('/reviews', ReviewController.getReviews);
+
+router.post('/book-requests', BookRequestController.createBookRequest);
+router.get('/book-requests', BookRequestController.getBookRequests);
 
 export default router;
