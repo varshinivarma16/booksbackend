@@ -4,20 +4,22 @@ import { CategoryModel, BookModel } from '../../bookstore/models/homepage';
 
 class BookController {
   // ✅ GET all categories
-  static async getAllCategories(req: Request, res: Response): Promise<void> {
-    try {
-      const categories = await CategoryModel.find();
-      if (!categories.length) {
-        res.status(404).json({ error: 'No categories found' });
-        return;
-      }
-      res.status(200).json(categories);
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-      res.status(500).json({ error: 'An unexpected error occurred while fetching categories' });
-    }
-  }
+static async getBooksByCategory(req: Request, res: Response): Promise<void> {
+  try {
+    const { categoryName } = req.params;
+    const books = await BookModel.find({ categoryName }).lean();
 
+    if (!books.length) {
+      res.status(404).json({ error: 'No books found for this category' });
+      return;
+    }
+
+    res.status(200).json(books);
+  } catch (err) {
+    console.error('Error fetching books:', err);
+    res.status(500).json({ error: 'An unexpected error occurred while fetching books' });
+  }
+}
   // ✅ GET category by name with books
   static async getCategoryByNameWithBooks(req: Request, res: Response): Promise<void> {
     try {
