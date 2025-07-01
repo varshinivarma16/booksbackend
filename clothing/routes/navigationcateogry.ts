@@ -2,7 +2,6 @@ import express from 'express';
 import CategoryController from '../../clothing/controllers/navigationcateogry';
 
 const router = express.Router();
-
 // GET
 router.get('/', CategoryController.getAllCategories);
 router.get('/:gender/:categoryName', CategoryController.getCategoryByNameWithCommonDresses);
@@ -11,7 +10,6 @@ router.get('/categories/:gender/:categoryId', CategoryController.getCategoryByNa
  // ✅ New endpoint for dress details by ID
 router.delete('/categories', CategoryController.deleteAllCategories);
 router.delete('/dresses', CategoryController.deleteAllDresses);
-
 // POST
 router.post('/categories', CategoryController.createCategory);
 router.post('/dresses', CategoryController.createDress);

@@ -10,6 +10,7 @@ import  bmi from './fitness/routes/bmi';
 import clothing from './clothing/routes/navigationcateogry';
 import ecommerce from './E-Commerce/routes/payment';
 import homepage from './bookstore/routes/homepage';
+import stockroutes from './Stocks/routes/stockroutes';
 
 import cors from 'cors';
 
@@ -36,6 +37,7 @@ app.use('/api/fitness', bmi);
 app.use('/api/clothing', clothing);
 app.use('/api/ecommerce', ecommerce);
 app.use('/api/bookstore', homepage);
+app.use('/api/stocks',stockroutes);
 
 const MONGO_URI = process.env.MONGO_URI!;
 console.log("Connecting to:", MONGO_URI);
