@@ -20,6 +20,7 @@ const stockRoutes = require('./routes/stockRoutes');
 const collectionRoutes = require('./routes/collectionRoutes');
 
 const topStockRoutes = require('./routes/topStockRoutes');
+
 const email=require('./routes/hospital/email');
 const event=require('./routes/hospital/event');
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/stocks/producttools', productToolRoutes);
 app.use('/api/topstocks', topStockRoutes);
 app.use('/api/contact', email);
 app.use('/api/event', event);
+
 
 
 

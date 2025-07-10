@@ -11,7 +11,9 @@ import clothing from './clothing/routes/navigationcateogry';
 import ecommerce from './E-Commerce/routes/payment';
 import homepage from './bookstore/routes/homepage';
 import stockroutes from './Stocks/routes/stockroutes';
-
+import teacher from './Education/routes/teacher';
+import content from './bookstore/routes/content';
+import category from './bookstore/routes/category';
 import cors from 'cors';
 
 import dotenv from 'dotenv';
@@ -37,7 +39,10 @@ app.use('/api/fitness', bmi);
 app.use('/api/clothing', clothing);
 app.use('/api/ecommerce', ecommerce);
 app.use('/api/bookstore', homepage);
+app.use('/api/bookstore/content', content);
+app.use('/api/bookstore/category', category);
 app.use('/api/stocks',stockroutes);
+app.use('/api/education',teacher);
 
 const MONGO_URI = process.env.MONGO_URI!;
 console.log("Connecting to:", MONGO_URI);

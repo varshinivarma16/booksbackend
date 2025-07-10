@@ -12,6 +12,7 @@ router.post('/categories/:categoryName', BookController.createBook);
 
 // Book details route
 router.get('/categories/:categoryName/:bookId', BookController.getBookDetailsById);
+router.patch('/categories/:categoryName/:bookId', BookController.updateBookImageUrl);
 
 
 // Delete routes

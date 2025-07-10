@@ -20,36 +20,35 @@ class BookController {
 
   // ✅ GET category by name with books
   static async getCategoryByNameWithBooks(req: Request, res: Response): Promise<void> {
-  try {
-    const { categoryName } = req.params;
+    try {
+      const { categoryName } = req.params;
 
-    if (!categoryName) {
-      res.status(400).json({ error: 'Category name is required' });
-      return;
+      if (!categoryName) {
+        res.status(400).json({ error: 'Category name is required' });
+        return;
+      }
+
+      const category = await CategoryModel.findOne({
+        name: { $regex: `^${categoryName}$`, $options: 'i' }
+      }).populate({
+        path: 'books',
+        select: 'title price imageUrl bookName viewCount subCategory'
+      });
+
+      if (!category) {
+        res.status(404).json({ error: 'Category not found for the specified name' });
+        return;
+      }
+
+      res.status(200).json({
+        categoryName: category.name,
+        books: category.books
+      });
+    } catch (err: any) {
+      console.error('Error fetching category by name:', err);
+      res.status(500).json({ error: 'An unexpected error occurred while fetching category data' });
     }
-
-    const category = await CategoryModel.findOne({
-      name: { $regex: `^${categoryName}$`, $options: 'i' }
-    }).populate({
-      path: 'books',
-      select: 'title price imageUrl bookName viewCount subCategory'
-    });
-
-    if (!category) {
-      res.status(404).json({ error: 'Category not found for the specified name' });
-      return;
-    }
-
-    res.status(200).json({
-      categoryName: category.name,
-      books: category.books
-    });
-  } catch (err: any) {
-    console.error('Error fetching category by name:', err);
-    res.status(500).json({ error: 'An unexpected error occurred while fetching category data' });
   }
-}
-
 
   // ✅ POST a new category
   static async createCategory(req: Request, res: Response): Promise<void> {
@@ -96,7 +95,7 @@ class BookController {
       for (const book of booksData) {
         const { title, price, imageUrl, subCategory, description, viewCount, estimatedDelivery, tags, condition, author, publisher, isbn } = book;
 
-        if (!title || !price || !imageUrl || !subCategory || !description || viewCount === undefined || !estimatedDelivery || !tags || !condition  ) {
+        if (!title || !price || !imageUrl || !subCategory || !description || viewCount === undefined || !estimatedDelivery || !tags || !condition) {
           res.status(400).json({
             error: 'All fields (title, price, imageUrl, subCategory, description, viewCount, estimatedDelivery, tags, condition, productCategory, author, publisher, isbn) are required for each book'
           });
@@ -141,7 +140,6 @@ class BookController {
           author,
           publisher,
           isbn,
-          
         });
 
         const savedBook = await newBook.save();
@@ -162,37 +160,90 @@ class BookController {
     }
   }
 
-  // ✅ GET book details by bookName
+  // ✅ GET book details by bookId
   static async getBookDetailsById(req: Request, res: Response): Promise<void> {
-  try {
-    const { bookId } = req.params;
+    try {
+      const { bookId } = req.params;
 
-    if (!bookId) {
-      res.status(400).json({ error: 'Book ID is required' });
-      return;
+      if (!bookId) {
+        res.status(400).json({ error: 'Book ID is required' });
+        return;
+      }
+
+      const book = await BookModel.findById(bookId);
+
+      if (!book) {
+        res.status(404).json({ error: 'Book not found' });
+        return;
+      }
+
+      res.status(200).json(book);
+    } catch (err: any) {
+      console.error('Error fetching book details:', err);
+      
+      // If invalid ID format, return 400
+      if (err.name === 'CastError') {
+        res.status(400).json({ error: 'Invalid book ID format' });
+        return;
+      }
+
+      res.status(500).json({ error: 'An unexpected error occurred while fetching book details' });
     }
-
-    const book = await BookModel.findById(bookId);
-
-    if (!book) {
-      res.status(404).json({ error: 'Book not found' });
-      return;
-    }
-
-    res.status(200).json(book);
-  } catch (err:any) {
-    console.error('Error fetching book details:', err);
-    
-    // If invalid ID format, return 400
-    if (err.name === 'CastError') {
-      res.status(400).json({ error: 'Invalid book ID format' });
-      return;
-    }
-
-    res.status(500).json({ error: 'An unexpected error occurred while fetching book details' });
   }
-}
 
+  // ✅ PATCH book imageUrl by bookId
+  static async updateBookImageUrl(req: Request, res: Response): Promise<void> {
+    try {
+      const { bookId } = req.params;
+      const { imageUrl } = req.body;
+
+      if (!bookId) {
+        res.status(400).json({ error: 'Book ID is required' });
+        return;
+      }
+
+      if (!imageUrl) {
+        res.status(400).json({ error: 'Image URL is required' });
+        return;
+      }
+
+      // Validate bookId format
+      if (!mongoose.Types.ObjectId.isValid(bookId)) {
+        res.status(400).json({ error: 'Invalid book ID format' });
+        return;
+      }
+
+      // Optional: Validate imageUrl format (basic URL check)
+      const urlPattern = /^(https?:\/\/[^\s/$.?#].[^\s]*)$/i;
+      if (!urlPattern.test(imageUrl)) {
+        res.status(400).json({ error: 'Invalid image URL format' });
+        return;
+      }
+
+      const book = await BookModel.findById(bookId);
+      if (!book) {
+        res.status(404).json({ error: 'Book not found' });
+        return;
+      }
+
+      book.imageUrl = imageUrl;
+      const updatedBook = await book.save();
+
+      res.status(200).json({
+        message: 'Book image URL updated successfully',
+        book: updatedBook
+      });
+    } catch (err: any) {
+      console.error('Error updating book image URL:', err);
+      
+      if (err.name === 'CastError') {
+        res.status(400).json({ error: 'Invalid book ID format' });
+        return;
+      }
+
+      res.status(500).json({ error: 'An unexpected error occurred while updating book image URL' });
+    }
+  }
 
   // ✅ DELETE all categories
   static async deleteAllCategories(req: Request, res: Response): Promise<void> {
@@ -217,8 +268,5 @@ class BookController {
     }
   }
 }
-
-
-
 
 export default BookController;
